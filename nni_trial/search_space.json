@@ -1,0 +1,11 @@
+{
+    "optimizer":{"_type":"choice","_value":["Adam", "SGD"]},
+    "learning_rate":{"_type":"uniform","_value":[0.0001, 0.005]},
+    "activation":{"_type":"choice","_value":["relu", "tanh"]} ,
+    "kernel_size":{"_type":"randint","_value":[1, 5 ]} ,
+    "pool_size":{"_type":"randint","_value":[1 ,5 ]},
+    "Conv2D_1_number":{"_type":"randint","_value":[1 ,128 ]},
+    "Conv2D_2_number":{"_type":"randint","_value":[ 1,128 ]},
+    "dense_size":{"_type":"randint","_value":[ 5,100 ]},
+    "Dropout_rate":{"_type":"uniform","_value":[ 0,1 ]}
+}
