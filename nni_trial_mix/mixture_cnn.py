@@ -47,6 +47,7 @@ import data_read
 LOG = logging.getLogger('ayf_nni_cnn')
 #K.set_image_data_format('channels_last')
 TENSORBOARD_DIR = os.environ['NNI_OUTPUT_DIR']
+print(TENSORBOARD_DIR)
 
 H, W = 40, 40
 CHANNELS=16
@@ -98,6 +99,24 @@ def create_mixture_model(hyper_params):
     z=Dropout(hyper_params['Dropout_rate'])(z)
     z=Dense(2,activation='softmax')(z)
     model=Model(inputs=[inputs_3d,x_1d],outputs=z)
+    if hyper_params['optimizer'] == 'Adam':
+        optimizer = op.Adam(lr=hyper_params['learning_rate'])
+    else:
+        optimizer = op.SGD(lr=hyper_params['learning_rate'], momentum=0.9)
+    model.compile(loss=losses.categorical_crossentropy, optimizer=optimizer, metrics=['accuracy'])
+    model.summary()
+    return model
+
+def create_Only3D_model(hyper_params):
+    inputs_3d=Input(shape=(40,40,16))
+    x_3d=create_3d_model(inputs_3d,hyper_params)
+    # x_1d=Input(shape=(20,))
+    # mixtured=merge.concatenate([x_3d,x_1d])
+    z=BatchNormalization()(x_3d)
+    z=Dense(np.int32(hyper_params['dense_size']),activation='relu')(z)
+    z=Dropout(hyper_params['Dropout_rate'])(z)
+    z=Dense(2,activation='softmax')(z)
+    model=Model(inputs=inputs_3d,outputs=z)
     if hyper_params['optimizer'] == 'Adam':
         optimizer = op.Adam(lr=hyper_params['learning_rate'])
     else:
@@ -167,11 +186,13 @@ def train(args, params):
 #    train_x,train_y=aug_data
     train_y=data_read.label_to_onehot(train_y)
     test_y=data_read.label_to_onehot(test_y)
-    model = create_mixture_model(params)
-    SendMetric=SendMetrics(validation_data=([test_x3d,test_x1d],test_y))
-    model.fit([train_x3d,train_x1d], train_y, batch_size=args.batch_size, epochs=args.epochs, verbose=1,
-        validation_data=([test_x3d,test_x1d], test_y), callbacks=[SendMetric, TensorBoard(log_dir=TENSORBOARD_DIR)])
-    y_pred=model.predict([test_x3d,test_x1d])
+    model = create_Only3D_model(params)
+    train_data=train_x3d
+    test_data=test_x3d
+    SendMetric=SendMetrics(validation_data=(test_data,test_y))
+    model.fit(train_data, train_y, batch_size=args.batch_size, epochs=args.epochs, verbose=1,
+        validation_data=(test_data, test_y), callbacks=[SendMetric, TensorBoard(log_dir=TENSORBOARD_DIR)])
+    y_pred=model.predict(test_data)
     score = roc_auc_score(test_y[:,1], y_pred[:,1])
 #    _, acc = model.evaluate(x_test, y_test, verbose=0)
     LOG.debug('Final result is: %d', score)
