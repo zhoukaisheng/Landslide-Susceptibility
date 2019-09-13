@@ -125,6 +125,24 @@ def create_Only3D_model(hyper_params):
     model.summary()
     return model
 
+def create_Only1D_model(hyper_params):
+    # inputs_3d=Input(shape=(40,40,16))
+    # x_3d=create_3d_model(inputs_3d,hyper_params)
+    x_1d=Input(shape=(16,))
+    # mixtured=merge.concatenate([x_3d,x_1d])
+    z=BatchNormalization()(x_1d)
+    z=Dense(np.int32(hyper_params['dense_size']),activation='relu')(z)
+    z=Dropout(hyper_params['Dropout_rate'])(z)
+    z=Dense(2,activation='softmax')(z)
+    model=Model(inputs=x_1d,outputs=z)
+    if hyper_params['optimizer'] == 'Adam':
+        optimizer = op.Adam(lr=hyper_params['learning_rate'])
+    else:
+        optimizer = op.SGD(lr=hyper_params['learning_rate'], momentum=0.9)
+    model.compile(loss=losses.categorical_crossentropy, optimizer=optimizer, metrics=['accuracy'])
+    model.summary()
+    return model
+
 
 class SendMetrics(Callback):
     '''
@@ -186,9 +204,9 @@ def train(args, params):
 #    train_x,train_y=aug_data
     train_y=data_read.label_to_onehot(train_y)
     test_y=data_read.label_to_onehot(test_y)
-    model = create_Only3D_model(params)
-    train_data=train_x3d
-    test_data=test_x3d
+    model = create_Only1D_model(params)
+    train_data=train_x1d[:,:16]
+    test_data=test_x1d[:,:16]
     SendMetric=SendMetrics(validation_data=(test_data,test_y))
     model.fit(train_data, train_y, batch_size=args.batch_size, epochs=args.epochs, verbose=1,
         validation_data=(test_data, test_y), callbacks=[SendMetric, TensorBoard(log_dir=TENSORBOARD_DIR)])
