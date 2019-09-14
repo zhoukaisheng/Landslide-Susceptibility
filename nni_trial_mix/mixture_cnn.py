@@ -128,7 +128,7 @@ def create_Only3D_model(hyper_params):
 def create_Only1D_model(hyper_params):
     # inputs_3d=Input(shape=(40,40,16))
     # x_3d=create_3d_model(inputs_3d,hyper_params)
-    x_1d=Input(shape=(16,))
+    x_1d=Input(shape=(20,))
     # mixtured=merge.concatenate([x_3d,x_1d])
     z=BatchNormalization()(x_1d)
     z=Dense(np.int32(hyper_params['dense_size']),activation='relu')(z)
@@ -189,12 +189,12 @@ def train(args, params):
     '''
     Train model
     '''
-    data=data_read.yushan_data()
-    train_x3d,train_y,test_x3d,test_y=data.get_train_data(tr_path='../data/yushan/yushan_tr_index.npy',
-                                                      tt_path='../data/yushan/yushan_tt_index.npy',
+    data=data_read.yongxin_data()
+    train_x3d,train_y,test_x3d,test_y=data.get_train_data(tr_path='../data/yongxin/tr_index.npy',
+                                                      tt_path='../data/yongxin/tt_index.npy',
                                                       data_type='3D')
-    train_x1d,train_y,test_x1d,test_y=data.get_train_data(tr_path='../data/yushan/yushan_tr_index.npy',
-                                                      tt_path='../data/yushan/yushan_tt_index.npy',
+    train_x1d,train_y,test_x1d,test_y=data.get_train_data(tr_path='../data/yongxin/tr_index.npy',
+                                                      tt_path='../data/yongxin/tt_index.npy',
                                                       data_type='1D')                                    
 #    data_aug_generator=data_read.data_aug(train_x,train_y)
 #    rot_x,rot_y=data_aug_generator.rotate(train_x,train_y)
@@ -205,8 +205,8 @@ def train(args, params):
     train_y=data_read.label_to_onehot(train_y)
     test_y=data_read.label_to_onehot(test_y)
     model = create_Only1D_model(params)
-    train_data=train_x1d[:,:16]
-    test_data=test_x1d[:,:16]
+    train_data=train_x1d
+    test_data=test_x1d
     SendMetric=SendMetrics(validation_data=(test_data,test_y))
     model.fit(train_data, train_y, batch_size=args.batch_size, epochs=args.epochs, verbose=1,
         validation_data=(test_data, test_y), callbacks=[SendMetric, TensorBoard(log_dir=TENSORBOARD_DIR)])

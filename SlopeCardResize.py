@@ -39,11 +39,11 @@ def resample(img,x_size,y_size,method):
 size_x=40
 size_y=40
 num_factos=16
-num_samples=7598
+num_samples=10041
 img_new=np.zeros((num_samples,size_x,size_y,num_factos))
 
 for it in range(num_samples):
-    filename='C:/Users/75129/Desktop/mypy/demo_all/yushan_all_OriCard/'+str(it)
+    filename='C:/Users/75129/Desktop/mypy/demo_all/yongxin_all_OriCard/'+str(it)
     img_resize=np.zeros((size_x,size_y,num_factos))
     img=np.load(filename+'.npy')
     (row,col)=img[:,:,0].shape
@@ -69,7 +69,7 @@ for it in range(num_samples):
     img_new[it,:,:,:]=img_resize
     print(str(it)+' is done')
 #    print(it)
-newfilename='C:/Users/75129/Desktop/mypy/demo_all/yushan_all_ResizeCard/all_yushan'
+newfilename='C:/Users/75129/Desktop/mypy/demo_all/yongxin_all_ResizeCard/all_yongxin'
 np.save(newfilename,img_new)
 
 
