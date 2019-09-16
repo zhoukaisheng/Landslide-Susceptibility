@@ -51,12 +51,16 @@ class yongxin_data():
         self.x_1d=self.x_1d[:,1:]
         self.label=pd.read_csv(os.path.join(BASE_DIR,'data/yongxin/yongxin.csv'))
         self.label=self.label['landslide']
-    def get_train_data(self,tr_path=None,tt_path=None,train_rate=0.7,data_type='3D'):
+    def get_train_data(self,tr_path=None,tt_path=None,train_rate=0.7,data_type='3D',onehot=False):
         if tr_path==None and tt_path==None:
             train_index,test_index=TrainIndexSelect(train_rate,self.label)
         else:
             train_index=np.load(tr_path)
             test_index=np.load(tt_path)
+        if onehot==True:
+            str_list=[14,15,16]
+            for str_index in str_list:
+                self.x_1d[:,str_index]=to_onehot(self.x_1d[:,str_index])
         if data_type=='3D':
             all_x=self.x_3d
             train_x=all_x[train_index,:,:,:]
@@ -67,6 +71,7 @@ class yongxin_data():
             test_x=all_x[test_index,:]
         train_y=self.label[train_index]
         test_y=self.label[test_index]
+
         return train_x,train_y,test_x,test_y
         
         
