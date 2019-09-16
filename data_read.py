@@ -8,6 +8,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+from sklearn.preprocessing import  OneHotEncoder
+
+
 BASE_DIR=os.path.dirname(__file__)
 class yushan_data():
     def __init__(self):
@@ -17,12 +20,16 @@ class yushan_data():
         self.x_1d=self.x_1d[:,1:]
         self.label=pd.read_csv(os.path.join(BASE_DIR,'data/yushan/yushan.csv'))
         self.label=self.label['landslide']
-    def get_train_data(self,tr_path=None,tt_path=None,train_rate=0.7,data_type='3D'):
+    def get_train_data(self,tr_path=None,tt_path=None,train_rate=0.7,data_type='3D',onehot=False):
         if tr_path==None and tt_path==None:
             train_index,test_index=TrainIndexSelect(train_rate,self.label)
         else:
             train_index=np.load(tr_path)
             test_index=np.load(tt_path)
+        if onehot==True:
+            str_list=[14,15,16]
+            for str_index in str_list:
+                self.x_1d[:,str_index]=to_onehot(self.x_1d[:,str_index])
         if data_type=='3D':
             all_x=self.x_3d
             train_x=all_x[train_index,:,:,:]
@@ -33,6 +40,7 @@ class yushan_data():
             test_x=all_x[test_index,:]
         train_y=self.label[train_index]
         test_y=self.label[test_index]
+
         return train_x,train_y,test_x,test_y
 
 class yongxin_data():
@@ -184,6 +192,20 @@ def label_to_onehot(label):
     onehot[:,0]=1-label
     onehot[:,1]=label
     return onehot
+
+def to_onehot(all_lable):
+    enc=OneHotEncoder()
+    enc.fit(all_lable)
+    shape=all_lable.shape
+    zero=np.zeros([shape[0],1])
+    all_lable = enc.transform(all_lable).toarray()
+    zero_index=[]
+    for i in range(shape[1]):
+        if all_lable[i,:]==zero:
+            zero_index.append(i)
+    all_lable=np.delete(all_lable,zero_index,axis=1)
+    return all_lable
+
     
             
 if __name__ == '__main__':

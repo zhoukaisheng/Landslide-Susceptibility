@@ -31,7 +31,7 @@ import numpy as np
 #from keras import backend as K
 from keras.callbacks import TensorBoard
 from keras.datasets import mnist
-from keras.layers import Conv2D, Dense, Flatten, MaxPooling2D,BatchNormalization,Dropout,Input,merge
+from keras.layers import Conv2D, Dense, Flatten, MaxPooling2D,BatchNormalization,Dropout,Input,merge,SeparableConv2D,DepthwiseConv2D,Conv3D,MaxPooling3D
 from keras.models import Sequential,Model
 from sklearn.metrics import roc_auc_score
 import keras.optimizers as op
@@ -82,17 +82,18 @@ def create_model(hyper_params, input_shape=(H, W, CHANNELS), num_classes=NUM_CLA
 def create_3d_model(inputs,hyper_params):
     # inputs=Input(shape=(40,40,16))
     x=BatchNormalization()(inputs)
-    x=Conv2D(np.int32(hyper_params['Conv2D_1_number']),kernel_size=(3,3),activation='relu')(x)
+    x=DepthwiseConv2D(kernel_size=(3,3),activation='relu')(x)
     x=MaxPooling2D(pool_size=(3,3))(x)
-    x=Conv2D(np.int32(hyper_params['Conv2D_1_number']),kernel_size=(3,3),activation='relu')(x)
+    x=DepthwiseConv2D(kernel_size=(3,3),activation='relu')(x)
     x=MaxPooling2D(pool_size=(3,3))(x)
+    x=DepthwiseConv2D(kernel_size=(3,3),activation='relu')(x)
     x=Flatten()(x)
     return x
 
 def create_mixture_model(hyper_params):
     inputs_3d=Input(shape=(40,40,16))
     x_3d=create_3d_model(inputs_3d,hyper_params)
-    x_1d=Input(shape=(20,))
+    x_1d=Input(shape=(4,))
     mixtured=merge.concatenate([x_3d,x_1d])
     z=BatchNormalization()(mixtured)
     z=Dense(np.int32(hyper_params['dense_size']),activation='relu')(z)
@@ -204,11 +205,13 @@ def train(args, params):
 #    train_x,train_y=aug_data
     train_y=data_read.label_to_onehot(train_y)
     test_y=data_read.label_to_onehot(test_y)
-    model = create_Only1D_model(params)
-    train_data=train_x1d
-    test_data=test_x1d
+    model = create_Only3D_model(params)
+    # train_x3d=np.expand_dims(train_x3d,axis=5)
+    # test_x3d=np.expand_dims(test_x3d,axis=5)
+    train_data=train_x3d
+    test_data=test_x3d
     SendMetric=SendMetrics(validation_data=(test_data,test_y))
-    model.fit(train_data, train_y, batch_size=args.batch_size, epochs=args.epochs, verbose=1,
+    model.fit(train_data, train_y,  epochs=args.epochs, verbose=1,
         validation_data=(test_data, test_y), callbacks=[SendMetric, TensorBoard(log_dir=TENSORBOARD_DIR)])
     y_pred=model.predict(test_data)
     score = roc_auc_score(test_y[:,1], y_pred[:,1])
@@ -228,7 +231,7 @@ def generate_default_params():
 if __name__ == '__main__':
     PARSER = argparse.ArgumentParser()
     PARSER.add_argument("--batch_size", type=int, default=32, help="batch size", required=False)
-    PARSER.add_argument("--epochs", type=int, default=50, help="Train epochs", required=False)
+    PARSER.add_argument("--epochs", type=int, default=100, help="Train epochs", required=False)
 #    PARSER.add_argument("--num_train", type=int, default=60000, help="Number of train samples to be used, maximum 60000", required=False)
 #    PARSER.add_argument("--num_test", type=int, default=10000, help="Number of test samples to be used, maximum 10000", required=False)
 
