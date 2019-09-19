@@ -27,9 +27,10 @@ class yushan_data():
             train_index=np.load(tr_path)
             test_index=np.load(tt_path)
         if onehot==True:
-            str_list=[14,15,16]
-            for str_index in str_list:
-                self.x_1d[:,str_index]=to_onehot(self.x_1d[:,str_index])
+            str_list=[13,14,15]
+            tmp=to_onehot(self.x_1d[:,str_list])
+            self.x_1d=np.delete(self.x_1d,str_list,axis=1)
+            self.x_1d=np.column_stack((self.x_1d,tmp))
         if data_type=='3D':
             all_x=self.x_3d
             train_x=all_x[train_index,:,:,:]
@@ -58,9 +59,10 @@ class yongxin_data():
             train_index=np.load(tr_path)
             test_index=np.load(tt_path)
         if onehot==True:
-            str_list=[14,15,16]
-            for str_index in str_list:
-                self.x_1d[:,str_index]=to_onehot(self.x_1d[:,str_index])
+            str_list=[13,14,15]
+            tmp=to_onehot(self.x_1d[:,str_list])
+            self.x_1d=np.delete(self.x_1d,str_list,axis=1)
+            self.x_1d=np.column_stack((self.x_1d,tmp))
         if data_type=='3D':
             all_x=self.x_3d
             train_x=all_x[train_index,:,:,:]
@@ -200,13 +202,16 @@ def label_to_onehot(label):
 
 def to_onehot(all_lable):
     enc=OneHotEncoder()
+    all_lable=all_lable+1
     enc.fit(all_lable)
+
+    all_lable = enc.transform(all_lable).toarray()
     shape=all_lable.shape
     zero=np.zeros([shape[0],1])
-    all_lable = enc.transform(all_lable).toarray()
     zero_index=[]
     for i in range(shape[1]):
-        if all_lable[i,:]==zero:
+        tmp=all_lable[i,:]==zero
+        if tmp.all():
             zero_index.append(i)
     all_lable=np.delete(all_lable,zero_index,axis=1)
     return all_lable

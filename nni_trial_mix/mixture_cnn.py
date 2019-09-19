@@ -205,11 +205,11 @@ def train(args, params):
 #    train_x,train_y=aug_data
     train_y=data_read.label_to_onehot(train_y)
     test_y=data_read.label_to_onehot(test_y)
-    model = create_Only3D_model(params)
+    model = create_mixture_model(params)
     # train_x3d=np.expand_dims(train_x3d,axis=5)
     # test_x3d=np.expand_dims(test_x3d,axis=5)
-    train_data=train_x3d
-    test_data=test_x3d
+    train_data=[train_x3d,train_x1d[:,-4:]]
+    test_data=[test_x3d,test_x1d[:,-4:]]
     SendMetric=SendMetrics(validation_data=(test_data,test_y))
     model.fit(train_data, train_y,  epochs=args.epochs, verbose=1,
         validation_data=(test_data, test_y), callbacks=[SendMetric, TensorBoard(log_dir=TENSORBOARD_DIR)])
