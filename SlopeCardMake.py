@@ -65,26 +65,29 @@ yinzi_1d = np.zeros([max_id+1, nums_factors])
 for it in range(max_id+1):  # 4890
     fanwei = (lable == it)
     fanwei = fanwei+np.zeros((row, col))
-    img_it = np.zeros((row, col, nums_factors))
+    img_it = np.zeros((row, col, nums_factors+1))
     for i in range(nums_factors):
         img_it[:, :, i] = fanwei*img[:, :, i]
-
+    img_it[:,:,-1]=fanwei
     index_fanwei = np.argwhere(lable == it)
     if len(index_fanwei) != 0:
         x_min = min(index_fanwei[:, 0])
         x_max = max(index_fanwei[:, 0])
         y_min = min(index_fanwei[:, 1])
         y_max = max(index_fanwei[:, 1])
-        img_it_resize = img_it[x_min:(x_max+1), y_min:(y_max+1), :]
-        # for i in range(nums_factors):
+        img_it_resize1 = img_it[x_min:(x_max+1), y_min:(y_max+1), :]
+        img_it_resize = img[x_min:(x_max+1), y_min:(y_max+1), :]
+        img_it_resize=np.insert(img_it_resize,-1,values=img_it_resize1[:,:,-1],axis=2)
+        # for i in range(nums_factors+1):
         #    plt.figure()
         #    plt.imshow(img_it_resize[:,:,i])
         #    plt.show()
-        filename='C:/Users/75129/Desktop/mypy/demo_all/yongxin_all_OriCard/'+str(it)
+        # print(img_it_resize.shape)
+        filename='C:/Users/75129/Desktop/mypy/demo_all/yongxin_all_No0_OriCard/'+str(it)
         np.save(filename,img_it_resize)
         xfanwei.append(x_max-x_min+1)
         yfanwei.append(y_max-y_min+1)
-        
+        img_it_resize=img_it_resize1
         for f in range(nums_factors):
             x,y,z=img_it_resize.shape
             values=np.reshape(img_it_resize,[x*y,z])
@@ -99,12 +102,12 @@ for it in range(max_id+1):  # 4890
         print(yinzi_1d[it,15])
     else:
         empty_index.append(it)
-        filename='C:/Users/75129/Desktop/mypy/demo_all/yongxin_all_OriCard/'+str(it)
+        filename='C:/Users/75129/Desktop/mypy/demo_all/yongxin_all_No0_OriCard/'+str(it)
         np.save(filename,np.zeros([1,1,nums_factors]))
         print(str(it)+' is done,but it is empty')
 
 df = pd.DataFrame(yinzi_1d,columns=yinzi_name)
-df.to_csv('C:/Users/75129/Desktop/mypy/demo_all/yongxin_all_OriCard/yinzi1d.csv')
+df.to_csv('C:/Users/75129/Desktop/mypy/demo_all/yongxin_all_No0_OriCard/yinzi1d.csv')
         
 
 #    plt.pyplot.imshow(img_it_resize[:,:,0])
