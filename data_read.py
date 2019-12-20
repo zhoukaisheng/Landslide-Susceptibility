@@ -12,6 +12,51 @@ from sklearn.preprocessing import  OneHotEncoder
 
 
 BASE_DIR=os.path.dirname(__file__)
+BASE_DIR_a_c='D:/yanshan_new/'
+class from_a_c_data():
+    def __init__(self,a,c):
+        self.x_3d=np.load(os.path.join(BASE_DIR_a_c,'resize/a'+str(a)+'_c'+str(int(100*c)).zfill(3)+'.npy'))
+        self.x_1d=pd.read_csv(os.path.join(BASE_DIR_a_c,'origion_shape/a'+str(a)+'_c'+str(int(100*c)).zfill(3)+'/yinzi1d.csv'))
+        self.x_1d=np.array(self.x_1d)
+        self.x_1d=self.x_1d[:,1:]
+        self.label=np.load(os.path.join(BASE_DIR_a_c,'tr_tt_npy_and_label/label_a'+str(a)+'_c'+str(int(100*c)).zfill(3)+'.npy'))
+        self.label=self.label.reshape([self.label.shape[0],])
+        self.a=a
+        self.c=c
+        # self.label=self.label['landslide']
+    def get_train_data(self,data_type='3D',onehot=False):
+        a=self.a
+        c=self.c
+        tr_path=os.path.join(BASE_DIR_a_c,'tr_tt_npy_and_label/tr_a'+str(a)+'_c'+str(int(100*c)).zfill(3)+'.npy')
+        tt_path=os.path.join(BASE_DIR_a_c,'tr_tt_npy_and_label/tt_a'+str(a)+'_c'+str(int(100*c)).zfill(3)+'.npy')
+        train_index=np.load(tr_path)
+        train_index=train_index.reshape([train_index.shape[1],])
+        test_index=np.load(tt_path)
+        test_index=test_index.reshape([test_index.shape[1],])
+        # if tr_path==None and tt_path==None:
+        #     train_index,test_index=TrainIndexSelect(train_rate,self.label)
+        # else:
+        #     train_index=np.load(tr_path)
+        #     test_index=np.load(tt_path)
+        # if onehot==True:
+        #     str_list=[13,14,15]
+        #     tmp=to_onehot(self.x_1d[:,str_list])
+        #     self.x_1d=np.delete(self.x_1d,str_list,axis=1)
+        #     self.x_1d=np.column_stack((self.x_1d,tmp))
+        if data_type=='3D':
+            all_x=self.x_3d
+            train_x=all_x[train_index,:,:,:]
+            test_x=all_x[test_index,:,:,:]
+        elif data_type=='1D':
+            all_x=self.x_1d
+            train_x=all_x[train_index,:]
+            test_x=all_x[test_index,:]
+        train_y=self.label[train_index]
+        test_y=self.label[test_index]
+
+        return train_x,train_y,test_x,test_y
+
+
 class yushan_data():
     def __init__(self):
         self.x_3d=np.load(os.path.join(BASE_DIR,'data/yushan/all_yushan.npy'))
@@ -47,12 +92,17 @@ class yushan_data():
 class yongxin_data():
     def __init__(self):
         self.x_3d=np.load(os.path.join(BASE_DIR,'data/yongxin/all_yongxin.npy'))
+        self.x_3d_bno0=np.load(os.path.join(BASE_DIR,'data/yongxin/all_yongxin_NO0.npy'))
         self.x_1d=pd.read_csv(os.path.join(BASE_DIR,'data/yongxin/yinzi1d.csv'))
         self.x_1d=np.array(self.x_1d)
         self.x_1d=self.x_1d[:,1:]
         self.label=pd.read_csv(os.path.join(BASE_DIR,'data/yongxin/yongxin.csv'))
         self.label=self.label['landslide']
-    def get_train_data(self,tr_path=None,tt_path=None,train_rate=0.7,data_type='3D',onehot=False):
+    def get_train_data(self,tr_path=None,tt_path=None,train_rate=0.7,data_type='3D',onehot=False,no0=False):
+        if no0==False:
+            x_3d=self.x_3d
+        elif no0==True:
+            x_3d=self.x_3d_bno0
         if tr_path==None and tt_path==None:
             train_index,test_index=TrainIndexSelect(train_rate,self.label)
         else:
@@ -64,7 +114,7 @@ class yongxin_data():
             self.x_1d=np.delete(self.x_1d,str_list,axis=1)
             self.x_1d=np.column_stack((self.x_1d,tmp))
         if data_type=='3D':
-            all_x=self.x_3d
+            all_x=x_3d
             train_x=all_x[train_index,:,:,:]
             test_x=all_x[test_index,:,:,:]
         elif data_type=='1D':
@@ -75,6 +125,8 @@ class yongxin_data():
         test_y=self.label[test_index]
 
         return train_x,train_y,test_x,test_y
+
+
         
         
 
@@ -216,14 +268,15 @@ def to_onehot(all_lable):
     all_lable=np.delete(all_lable,zero_index,axis=1)
     return all_lable
 
+
     
             
 if __name__ == '__main__':
-    data=yongxin_data()
+    data=from_a_c_data(a=10000,c=0.1)
     train_x,train_y,test_x,test_y=data.get_train_data(data_type='1D')
-    train_index,test_index=TrainIndexSelect(0.7,data.label)
-    np.save('tr_index',train_index)
-    np.save('tt_index',test_index)
+    # train_index,test_index=TrainIndexSelect(0.7,data.label)
+    # np.save('tr_index',train_index)
+    # np.save('tt_index',test_index)
 #     batch_gen=batch_generator([train_x,train_y] , batch_size=32, shuffle=True)
 # #    for i in range(5):
 # #        image_batch, label_batch=next(batch_gen)
@@ -232,5 +285,8 @@ if __name__ == '__main__':
 #     widen_x,widen_y=data_au.widen(widen_size=1)
 #     train_y_onehot=label_to_onehot(train_y)
 #     new_x,new_y=data_au.add_noise(test_x, test_y,10)
+    print(data.x_1d.shape)
+    print(data.x_3d.shape)
+    print(data.label.shape)
     print(train_x.shape)
     print(test_x.shape)
