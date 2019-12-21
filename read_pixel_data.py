@@ -89,7 +89,7 @@ def get_3d_x_save_memory(factors,window_size):
 
 def get_3d_x(factors,window_size):
     # windows_size must be Odd number
-    factors_3d=np.zeros([factors.shape[0],factors.shape[1],window_size*window_size,factors.shape[2]])
+    factors_3d=np.zeros([window_size*window_size,factors.shape[0],factors.shape[1],factors.shape[2]])
     index=np.arange(0,window_size*window_size)
     index=index.reshape([window_size,window_size])
     # print(index)
@@ -130,8 +130,10 @@ def get_3d_x(factors,window_size):
         tmp=factors[x_start_3d:x_end_3d,y_start_3d:y_end_3d,:]
         # print(tmp.shape)
         # print(factors_3d[i,x_start_3d:x_end_3d,y_start_3d:y_end_3d,:].shape)
-        factors_3d[x_start:x_end,y_start:y_end,i,:]=tmp
-    factors_3d=factors_3d.reshape([factors.shape[0],factors.shape[1],window_size,window_size,factors.shape[2]])
+        factors_3d[i,x_start:x_end,y_start:y_end,:]=tmp
+    factors_3d=factors_3d.reshape([window_size,window_size,factors.shape[0],factors.shape[1],factors.shape[2]])
+    factors_3d=np.swapaxes(factors_3d,0,2)
+    factors_3d=np.swapaxes(factors_3d,1,3)
     print(factors_3d.shape)
     return factors_3d
 
@@ -225,16 +227,16 @@ def get_tr_tt_data_3d_save_memory(data_3d_path,tr_tt_img,window_size):
 
 if __name__ == '__main__':
     factors=read_factor_data()
-    window_size=9
+    window_size=7
     print('begin get_3d_x')
-    factors_3d=get_3d_x_save_memory(factors,window_size)
+    factors_3d=get_3d_x(factors,window_size)
     print('end get_3d_x')
     label=imageio.imread('D:/yanshan_new/tr_and_tt.tif')
     data_3d_path='D:/yanshan_new/pixel_traing_data/'
-    tr_x,tr_y,tt_x,tt_y=get_tr_tt_data_3d_save_memory(data_3d_path,label,window_size)
+    tr_x,tr_y,tt_x,tt_y=get_tr_tt_data_3d(factors_3d,label)
     # tr_x,tr_y,tt_x,tt_y=get_tr_tt_data_3d(factors_3d,label)
     # save memory
-    # np.save('D:/yanshan_new/pixel_traing_data/factors_3d_'+str(window_size)+'.npy',factors_3d)
+    np.save('D:/yanshan_new/pixel_traing_data/factors_3d_'+str(window_size)+'.npy',factors_3d)
     np.save('D:/yanshan_new/pixel_traing_data/tr_x_'+str(window_size)+'.npy',tr_x)
     np.save('D:/yanshan_new/pixel_traing_data/tr_y_'+str(window_size)+'.npy',tr_y)
     np.save('D:/yanshan_new/pixel_traing_data/tt_x_'+str(window_size)+'.npy',tt_x)
